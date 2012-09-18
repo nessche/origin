@@ -549,8 +549,9 @@ module Origin
     end
 
     def custom_specify(name, operator, value)
-      result = @serializers[name.to_s].type.custom_specify(name, operator, value)
-      result
+      serializer = @serializers[name.to_s]
+      raise RuntimeError, "No Serializer found for field #{name}" unless serializer
+      serializer.type.custom_specify(name, operator, value, serializer.options)
     end
 
     # Force the values of the criterion to be evolved.
