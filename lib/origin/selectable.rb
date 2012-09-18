@@ -534,8 +534,23 @@ module Origin
     # @since 1.0.0
     def expr_query(criterion)
       selection(criterion) do |selector, field, value|
-        selector.merge!(field.specify(value.__expand_complex__, negating?))
+        if (field.is_a? Key) && custom_serialization?(field.name, field.operator)
+          specified = custom_specify(field.name, field.operator, value)
+        else
+          specified = field.specify(value.__expand_complex__, negating?)
+        end
+        selector.merge!(specified)
       end
+    end
+
+    def custom_serialization?(name, operator)
+      serializer = @serializers[name.to_s]
+      serializer && serializer.type.respond_to?(:custom_serialization?) && serializer.type.custom_serialization?(operator)
+    end
+
+    def custom_specify(name, operator, value)
+      result = @serializers[name.to_s].type.custom_specify(name, operator, value)
+      result
     end
 
     # Force the values of the criterion to be evolved.
